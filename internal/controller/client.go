@@ -16,8 +16,10 @@ import (
 type clientRoutes struct {
 	clientService service.IClient
 }
-type clientResponse struct {
-	User      model.User      `json:"user"`
+type UserResponse struct {
+	User model.User `json:"user"`
+}
+type SubscribeResponse struct {
 	Subscribe model.Subscribe `json:"subscribe"`
 }
 
@@ -59,7 +61,7 @@ func (cR *clientRoutes) authMe(ctx *fiber.Ctx) error {
 		slog.Errorf(fmt.Errorf(path+".GetUserByEmail, error: {%w}", err).Error())
 		return wrapHttpError(ctx, fiber.StatusInternalServerError, "internal server error")
 	}
-	resp := clientResponse{User: user}
+	resp := UserResponse{User: user}
 	err = httpResponse(ctx, fiber.StatusOK, resp)
 	if err != nil {
 		return wrapHttpError(ctx, fiber.StatusInternalServerError, "internal server error")
@@ -91,7 +93,7 @@ func (cR *clientRoutes) subscribe(ctx *fiber.Ctx) error {
 		slog.Errorf(fmt.Errorf(path+".Subscribe, error: {%w}", err).Error())
 		return err
 	}
-	resp := clientResponse{Subscribe: subscribe}
+	resp := SubscribeResponse{Subscribe: subscribe}
 	err = httpResponse(ctx, fiber.StatusOK, resp)
 	if err != nil {
 		return wrapHttpError(ctx, fiber.StatusInternalServerError, "internal server error")
@@ -100,5 +102,35 @@ func (cR *clientRoutes) subscribe(ctx *fiber.Ctx) error {
 }
 
 func (cR *clientRoutes) unSubscribe(ctx *fiber.Ctx) error {
+	path := "internal.controller.subscribe.unSubscribe"
+	accessToken := ctx.Get("Authorization")
+	if len([]rune(accessToken)) == 0 {
+		return fmt.Errorf(path, "no token provided")
+	}
+	t := strings.Split(accessToken, " ")[1]
+	tokenClaims, err := cR.clientService.VerifyToken(t)
+	if err != nil {
+		slog.Errorf(fmt.Errorf(path+".VerifyToken, error: {%w}", err).Error())
+		return wrapHttpError(ctx, fiber.StatusUnauthorized, custom_errors.ErrUserUnauthorized.Error())
+	}
+	p := ctx.Query("id")
+	id, err := strconv.Atoi(p)
+	if err != nil {
+		slog.Errorf(fmt.Errorf(path+".VerifyToken, error: {%w}", err).Error())
+		return wrapHttpError(ctx, fiber.StatusUnauthorized, err.Error())
+	}
+
+	params := model.Subscribe{UserID: tokenClaims.UserID, SubscribedToId: id}
+	err = cR.clientService.Unsubscribe(ctx.Context(), params)
+	if err != nil {
+		slog.Errorf(fmt.Errorf(path+".Unsubscribe, error: {%w}", err).Error())
+		return err
+	}
+
+	resp := SubscribeResponse{Subscribe: params}
+	err = httpResponse(ctx, fiber.StatusOK, resp)
+	if err != nil {
+		return wrapHttpError(ctx, fiber.StatusInternalServerError, "internal server error")
+	}
 	return nil
 }

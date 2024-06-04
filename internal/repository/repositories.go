@@ -18,7 +18,7 @@ type IToken interface {
 }
 type ISubscribe interface {
 	CreateSubscribe(ctx context.Context, subscribe model.Subscribe) (model.Subscribe, error)
-	DeleteSubscribe(ctx context.Context, subscribe model.Subscribe) (model.Subscribe, error)
+	DeleteSubscribe(ctx context.Context, subscribe model.Subscribe) error
 }
 type Repositories struct {
 	IUser

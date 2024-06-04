@@ -8,6 +8,7 @@ import (
 	"testovoe_2/internal/model"
 	"testovoe_2/pkg/postgres"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -51,6 +52,19 @@ func (sR *SubscribeRepository) CreateSubscribe(
 func (sR *SubscribeRepository) DeleteSubscribe(
 	ctx context.Context,
 	subscribe model.Subscribe,
-) (model.Subscribe, error) {
-	return model.Subscribe{}, nil
+) error {
+	path := "internal.repository.subscribe.DeleteSubscribe"
+	sql, args, err := sR.Builder.
+		Delete("public.subscriptions").
+		Where(sq.Eq{"user_id": subscribe.UserID}).
+		Where(sq.Eq{"subscribed_to_id": subscribe.SubscribedToId}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf(path+".ToSql, error: {%w}", err)
+	}
+	var s model.Subscribe
+	_ = sR.Pool.QueryRow(ctx, sql, args...)
+	s.SubscribedToId = subscribe.SubscribedToId
+	s.UserID = subscribe.UserID
+	return nil
 }

@@ -24,7 +24,7 @@ type IClient interface {
 	VerifyToken(token string) (TokenClaims, error)
 	GetUserByEmail(ctx context.Context, params AuthParams) (model.User, error)
 	Subscribe(ctx context.Context, subscribe model.Subscribe) (model.Subscribe, error)
-	Unsubscribe(ctx context.Context, token string) (int, error)
+	Unsubscribe(ctx context.Context, subscribe model.Subscribe) error
 }
 
 type Services struct {

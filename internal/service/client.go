@@ -60,6 +60,10 @@ func (cS *ClientService) Subscribe(ctx context.Context, subscribe model.Subscrib
 	return subscribe, nil
 }
 
-func (cS *ClientService) Unsubscribe(ctx context.Context, token string) (int, error) {
-	return 0, nil
+func (cS *ClientService) Unsubscribe(ctx context.Context, subscribe model.Subscribe) error {
+	err := cS.subscribeRepository.DeleteSubscribe(ctx, subscribe)
+	if err != nil {
+		return err
+	}
+	return nil
 }
