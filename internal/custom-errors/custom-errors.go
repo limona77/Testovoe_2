@@ -9,4 +9,5 @@ var (
 	ErrUserUnauthorized = errors.New("пользователь не авторизован")
 	ErrTokenExpired     = errors.New("Токен умер")
 	ErrYouAlreadySub    = errors.New("Вы уже подписаны на этого пользователя")
+	ErrYouCantSub       = errors.New("ты не можешь подписаться на себя")
 )

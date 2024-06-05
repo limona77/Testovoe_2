@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"testovoe_2/internal/custom-errors"
 	custom_validator "testovoe_2/internal/custom-validator"
 	"testovoe_2/internal/model"
@@ -34,6 +35,7 @@ type authResponse struct {
 	User         model.User `json:"user"`
 	RefreshToken string     `json:"refreshToken"`
 	AccessToken  string     `json:"accessToken"`
+	Birthdays    []string   `json:"birthdays"`
 }
 
 // @Summary Register
@@ -77,6 +79,21 @@ func (aR *authRoutes) register(ctx *fiber.Ctx) error {
 		return wrapHttpError(ctx, fiber.StatusInternalServerError, "internal server error")
 	}
 
+	ch := make(chan []string)
+	go func() {
+		err := aR.authService.BirthdayChecker(ctx.Context(), user, ch)
+		if err != nil {
+			return
+		}
+	}()
+	var wg sync.WaitGroup
+	res := make([]string, 0)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		res = <-ch
+	}()
+	wg.Wait()
 	ctx.Cookie(&fiber.Cookie{
 		Name:     "refreshToken",
 		Value:    tokens.RefreshToken,
@@ -85,12 +102,13 @@ func (aR *authRoutes) register(ctx *fiber.Ctx) error {
 	})
 	user.Password = ""
 
-	resp := authResponse{User: user, RefreshToken: tokens.RefreshToken, AccessToken: tokens.AccessToken}
+	resp := authResponse{User: user, RefreshToken: tokens.RefreshToken, AccessToken: tokens.AccessToken, Birthdays: res}
 	err = httpResponse(ctx, 200, resp)
 	if err != nil {
 		slog.Errorf(fmt.Errorf(path+".httpResponse, error: {%w}", err).Error())
 		return wrapHttpError(ctx, fiber.StatusInternalServerError, "internal server error")
 	}
+
 	return nil
 }
 
@@ -135,7 +153,21 @@ func (aR *authRoutes) login(ctx *fiber.Ctx) error {
 		slog.Errorf(fmt.Errorf(path+".GetUserByEmail, error: {%w}", err).Error())
 		return wrapHttpError(ctx, fiber.StatusInternalServerError, "internal server error")
 	}
-
+	ch := make(chan []string)
+	go func() {
+		err := aR.authService.BirthdayChecker(ctx.Context(), user, ch)
+		if err != nil {
+			return
+		}
+	}()
+	var wg sync.WaitGroup
+	res := make([]string, 0)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		res = <-ch
+	}()
+	wg.Wait()
 	ctx.Cookie(&fiber.Cookie{
 		Name:     "refreshToken",
 		Value:    tokens.RefreshToken,
@@ -143,7 +175,7 @@ func (aR *authRoutes) login(ctx *fiber.Ctx) error {
 		HTTPOnly: true,
 	})
 
-	resp := authResponse{User: user, RefreshToken: tokens.RefreshToken, AccessToken: tokens.AccessToken}
+	resp := authResponse{User: user, RefreshToken: tokens.RefreshToken, AccessToken: tokens.AccessToken, Birthdays: res}
 	err = httpResponse(ctx, 200, resp)
 	if err != nil {
 		slog.Errorf(fmt.Errorf(path+".httpResponse, error: {%w}", err).Error())

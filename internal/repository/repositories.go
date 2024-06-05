@@ -10,6 +10,9 @@ type IUser interface {
 	CreateUser(context.Context, model.User) (model.User, error)
 	GetUserByEmail(context.Context, string) (model.User, error)
 }
+type INotification interface {
+	CheckBirthdays(ctx context.Context, params model.User) ([]string, error)
+}
 
 type IToken interface {
 	SaveToken(context.Context, model.Token) (model.Token, error)
@@ -24,8 +27,14 @@ type Repositories struct {
 	IUser
 	IToken
 	ISubscribe
+	INotification
 }
 
 func NewRepositories(db *postgres.DB) *Repositories {
-	return &Repositories{NewUserRepository(db), NewTokenRepository(db), NewSubscribeRepository(db)}
+	return &Repositories{
+		NewUserRepository(db),
+		NewTokenRepository(db),
+		NewSubscribeRepository(db),
+		NewNotificationRepository(db),
+	}
 }

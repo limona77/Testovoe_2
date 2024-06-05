@@ -88,6 +88,12 @@ func (cR *clientRoutes) subscribe(ctx *fiber.Ctx) error {
 		return wrapHttpError(ctx, fiber.StatusUnauthorized, err.Error())
 	}
 	params := model.Subscribe{UserID: tokenClaims.UserID, SubscribedToId: id}
+
+	if tokenClaims.UserID == params.SubscribedToId {
+		slog.Errorf(fmt.Errorf(path+".Subscribe, error: {%w}", err).Error())
+		return wrapHttpError(ctx, fiber.StatusBadRequest, custom_errors.ErrYouCantSub.Error())
+	}
+
 	subscribe, err := cR.clientService.Subscribe(ctx.Context(), params)
 	if err != nil {
 		slog.Errorf(fmt.Errorf(path+".Subscribe, error: {%w}", err).Error())

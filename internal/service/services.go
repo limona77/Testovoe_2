@@ -19,6 +19,7 @@ type IAuth interface {
 	Refresh(ctx context.Context, token string) (Tokens, model.User, error)
 	Login(ctx context.Context, params AuthParams) (Tokens, model.User, error)
 	Logout(ctx context.Context, token string) (int, error)
+	BirthdayChecker(ctx context.Context, params model.User, ch chan []string) error
 }
 type IClient interface {
 	VerifyToken(token string) (TokenClaims, error)
@@ -43,6 +44,7 @@ func NewServices(deps ServicesDeps) *Services {
 		IAuth: NewAuthService(
 			deps.Repository.IUser,
 			deps.Repository.IToken,
+			deps.Repository.INotification,
 			deps.SecretKeyAccess,
 			deps.SecretKeyRefresh),
 		IClient: NewClientService(deps.Repository.IUser, deps.Repository.ISubscribe),

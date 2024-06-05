@@ -48,6 +48,7 @@ func Run() {
 		ReadTimeout:  ReadTimeout,
 		WriteTimeout: WriteTimeout,
 	}
+
 	app := fiber.New(fiberConfig)
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,

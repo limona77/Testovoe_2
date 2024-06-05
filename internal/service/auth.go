@@ -29,14 +29,25 @@ type TokenClaims struct {
 }
 
 type AuthService struct {
-	userRepository   repository.IUser
-	tokenRepository  repository.IToken
-	SecretKeyAccess  []byte
-	SecretKeyRefresh []byte
+	userRepository         repository.IUser
+	tokenRepository        repository.IToken
+	notificationRepository repository.INotification
+	SecretKeyAccess        []byte
+	SecretKeyRefresh       []byte
 }
 
-func NewAuthService(uR repository.IUser, tR repository.IToken, secretKeyAccess, secretKeyRefresh []byte) *AuthService {
-	return &AuthService{uR, tR, secretKeyAccess, secretKeyRefresh}
+func NewAuthService(
+	uR repository.IUser,
+	tR repository.IToken,
+	nR repository.INotification,
+	secretKeyAccess, secretKeyRefresh []byte) *AuthService {
+	return &AuthService{
+		uR,
+		tR,
+		nR,
+		secretKeyAccess,
+		secretKeyRefresh,
+	}
 }
 
 func (aS *AuthService) Register(ctx context.Context, params AuthParams) (Tokens, model.User, error) {
@@ -71,6 +82,7 @@ func (aS *AuthService) Register(ctx context.Context, params AuthParams) (Tokens,
 		RefreshToken: tokens.RefreshToken,
 		UserID:       user.ID,
 	}
+
 	user.Birthday = userModel.Birthday
 	_, err = aS.tokenRepository.SaveToken(ctx, tokenModel)
 	if err != nil {
@@ -193,4 +205,20 @@ func (aS *AuthService) Logout(ctx context.Context, token string) (int, error) {
 	}
 
 	return userID, nil
+}
+
+func (aS *AuthService) BirthdayChecker(ctx context.Context, params model.User, ch chan []string) error {
+	path := "internal.service.notification.BirthdayChecker"
+	for {
+		birthdays, err := aS.notificationRepository.CheckBirthdays(ctx, params)
+		if err != nil {
+			return fmt.Errorf(path+".CheckBirthdays, error: {%w}", err)
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case ch <- birthdays:
+		}
+		time.Sleep(24 * time.Hour)
+	}
 }

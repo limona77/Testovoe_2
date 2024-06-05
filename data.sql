@@ -19,9 +19,9 @@ CREATE TABLE tokens
 );
 
 CREATE TABLE subscriptions (
-    user_id INT NOT NULL,
-    subscribed_to_id INT NOT NULL,
-    CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id),
+                               user_id INT NOT NULL,
+                               subscribed_to_id INT NOT NULL,
+                               CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users (id)
 
 );
 
