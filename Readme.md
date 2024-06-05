@@ -108,7 +108,7 @@
   }
   ```
 ### Подписка на пользователя
-- `POST subscribe?id={id пользователя}`
+- `POST /subscribe?id={id пользователя}`
 - **Запрос**: body не нужно
 - **Authorization=Bearer accessToken**
 
@@ -122,7 +122,7 @@
   }
   ```
 ### Отписка от пользователя
-- `DELETE unsubscribe?id={id пользователя}`
+- `DELETE /unsubscribe?id={id пользователя}`
 - **Запрос**: body не нужно
 - **Authorization=Bearer accessToken**
 
