@@ -6,7 +6,7 @@
 1. Склонируй репозиторий
 
 ```bash 
-  git clone https://github.com/limona77/Auth-JWT
+  git clone https://github.com/limona77/Testovoe_2
 ```
 2. Запусти программу
 ```bash 
